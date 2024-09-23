@@ -137,7 +137,8 @@ class KS(PDE):
                  L: float=None,
                  lmin: float=None,
                  lmax: float=None,
-                 device: torch.cuda.device = "cpu"):
+                 device: torch.cuda.device = "cpu",
+                 viscosity: float=1.0):
         super().__init__()
         # Start and end time of the trajectory
         self.tmin = 0 if tmin is None else tmin
@@ -167,6 +168,7 @@ class KS(PDE):
         self.max_velocity = 0.0
 
         assert (self.grid_size[0] >= self.nt_effective)
+        self.viscosity = viscosity
 
     def __repr__(self):
         return f'KS'
@@ -186,7 +188,7 @@ class KS(PDE):
         uxx = psdiff(u, period=L, order=2)
         uxxxx = psdiff(u, period=L, order=4)
         # Compute du/dt.
-        dudt = - u*ux - uxx - uxxxx
+        dudt = - u*ux - uxx - self.viscosity * uxxxx
         return dudt
 
     def fvm_reconstruction(self, t: float, u: np.ndarray, L: float) -> np.ndarray:

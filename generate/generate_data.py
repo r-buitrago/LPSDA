@@ -7,6 +7,8 @@ import torch
 import h5py
 import random
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from typing import Tuple
 from scipy.integrate import solve_ivp
 from copy import copy
@@ -158,17 +160,19 @@ def generate_trajectories(pde: PDE,
 
         # For the Heat (Burgers') equation, a fixed grid is used
         # For KdV and KS, the grid is flexible ->  this is due to scale symmetries which we want to exploit
-        if pde_string == 'Heat':
-            T = pde.tmax
-            L = pde.L
+        # if pde_string == 'Heat':
+        #     T = pde.tmax
+        #     L = pde.L
 
-        else:
-            t1 = pde.tmax - pde.tmax / 10
-            t2 = pde.tmax + pde.tmax / 10
-            T = (t1 - t2) * np.random.rand() + t2
-            l1 = pde.L - pde.L / 10
-            l2 = pde.L + pde.L / 10
-            L = (l1 - l2) * np.random.rand() + l2
+        # else:
+        #     t1 = pde.tmax - pde.tmax / 10
+        #     t2 = pde.tmax + pde.tmax / 10
+        #     T = (t1 - t2) * np.random.rand() + t2
+        #     l1 = pde.L - pde.L / 10
+        #     l2 = pde.L + pde.L / 10
+        #     L = (l1 - l2) * np.random.rand() + l2
+        T = pde.tmax
+        L = pde.L 
 
         t = np.linspace(pde.tmin, T, nt)
         x = np.linspace(0, (1 - 1.0 / nx) * L, nx)
@@ -230,7 +234,10 @@ def generate_data(experiment: str,
                   num_samples_valid: int,
                   num_samples_test: int,
                   batch_size: int=1,
-                  device: torch.cuda.device="cpu") -> None:
+                  device: torch.cuda.device="cpu",
+                  viscosity: float = 1.0,
+                  lmax: int = 3
+                  ) -> None:
     """
     Generate data for KdV, KS equation on periodic spatial domains.
     Args:
@@ -270,7 +277,9 @@ def generate_data(experiment: str,
                  grid_size=(nt, nx),
                  nt_effective=nt_effective,
                  L=L,
-                 device=device)
+                 device=device, 
+                 viscosity=viscosity,
+                 lmax=lmax)
 
     elif experiment == 'Burgers':
         # Heat equation is generated; afterwards trajectories are transformed via Cole-Hopf transformation.
@@ -324,7 +333,9 @@ def main(args: argparse) -> None:
                   num_samples_valid=args.valid_samples,
                   num_samples_test=args.test_samples,
                   batch_size=args.batch_size,
-                  device=args.device)
+                  device=args.device,
+                  viscosity=args.viscosity,
+                  lmax=args.lmax)
 
 
 if __name__ == "__main__":
@@ -356,6 +367,10 @@ if __name__ == "__main__":
                         help='Suffix for additional datasets')
     parser.add_argument('--log', type=eval, default=False,
                         help='pip the output to log file')
+    parser.add_argument('--viscosity', type=float, default=1.0,
+                        help='Viscosity of the equation')
+    parser.add_argument('--lmax', type=int, default=3,
+                        help='Maximum frequency of the initial conditions')
 
     args = parser.parse_args()
     main(args)
