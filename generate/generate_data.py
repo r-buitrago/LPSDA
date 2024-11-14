@@ -368,7 +368,7 @@ if __name__ == "__main__":
     parser.add_argument('--log', type=eval, default=False,
                         help='pip the output to log file')
     parser.add_argument('--viscosity', type=float, default=1.0,
-                        help='Viscosity of the equation')
+                        help='Viscosity of the KS equation (only used in the case of KS)')
     parser.add_argument('--lmax', type=int, default=3,
                         help='Maximum frequency of the initial conditions')
 
